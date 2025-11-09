@@ -12,6 +12,9 @@ public class Door : InteractableObject
     Collectable key;
 
     [SerializeField]
+    Transform hingeObject;
+
+    [SerializeField]
     float rotationRange;
 
     [SerializeField]
@@ -35,20 +38,20 @@ public class Door : InteractableObject
                 Collectable holdingItem = inventory.HoldingItem;
 
                 if (Equals(holdingItem, key))
-                    OpenDoor();
+                    TriggerDoor();
             }
             else
-                OpenDoor();
+                TriggerDoor();
         }
         else
         {
-            OpenDoor();
+            TriggerDoor();
         }
     }
 
     protected override void OnDisinteract() { }
 
-    private void OpenDoor()
+    private void TriggerDoor()
     {
         coroutine = StartCoroutine(DoorAnimation(!doorOpen, animationDuration));
     }
@@ -69,7 +72,7 @@ public class Door : InteractableObject
             float v = animationCurve.Evaluate(Mathf.Abs(p - r));
 
             Vector3 targetRotation = new Vector3(0, rotationRange * v, 0f);
-            transform.localRotation = Quaternion.Euler(targetRotation);
+            hingeObject.transform.localRotation = Quaternion.Euler(targetRotation);
             yield return null;
         }
         SetInteractability(true);

@@ -56,7 +56,7 @@ public class PlayerInteractionControl : MonoBehaviour
                 GameObject hitObject = hit.transform.gameObject;
                 InteractableObject interactable = hitObject.GetComponent<InteractableObject>();
 
-                if (!interactable)
+                if (!interactable && hitObject.transform.parent != null)
                     interactable = hitObject.transform.parent.GetComponent<InteractableObject>();
 
                 if (!interactable || !interactable.Interactable)
