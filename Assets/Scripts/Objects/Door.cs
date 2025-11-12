@@ -37,6 +37,10 @@ public class Door : InteractableObject
                 Inventory inventory = playerReferencer.Inventory;
                 Collectable holdingItem = inventory.HoldingItem;
 
+                Debug.Log("[DOOR] has key: " + Equals(holdingItem, key));
+                Debug.Log("Holding item: " + holdingItem);
+                Debug.Log("Key: " + key);
+
                 if (Equals(holdingItem, key))
                     TriggerDoor();
             }

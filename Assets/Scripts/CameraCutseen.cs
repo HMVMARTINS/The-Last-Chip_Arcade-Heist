@@ -71,6 +71,7 @@ public class CameraCutseen : MonoBehaviour
 
         TogglePlayerControls(false);
         playerReferencer.inventoryControler.DeactivateInventory();
+        playerReferencer.interactionControl.InteractionPointer.HidePointer();
 
         while (realTime < 1f)
         {
@@ -108,6 +109,7 @@ public class CameraCutseen : MonoBehaviour
         finished = true;
 
         playerReferencer.inventoryControler.ActivateInventory();
+        playerReferencer.interactionControl.InteractionPointer.ShowPointer();
 
         yield break;
     }

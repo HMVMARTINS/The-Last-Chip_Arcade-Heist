@@ -46,6 +46,8 @@ public class PlayerMovement : MonoBehaviour
     Vector3 autoPilotTarget = Vector3.zero;
     bool AutoPilotON => autoPilotTarget != Vector3.zero;
 
+    private bool crawlingHistory;
+
     private NavMeshAgent agent;
 
     private Coroutine autonomousMovementCoroutine;
@@ -111,10 +113,15 @@ public class PlayerMovement : MonoBehaviour
 
     void CrawlPlayer(bool crawling)
     {
+        if (crawling == crawlingHistory)
+            return;
+
         if (crawling)
             playerCollider.height = crawlHeight;
         else
             playerCollider.height = defaultHeight;
+
+        crawlingHistory = crawling;
     }
 
     void UpdateStepControl()

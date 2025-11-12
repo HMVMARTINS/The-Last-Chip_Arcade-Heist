@@ -96,7 +96,10 @@ public class InventoryVisualizer : MonoBehaviour
     public void ActivateInventory()
     {
         for (int i = 0; i < slots.Length; i++)
+        {
             slots[i].gameObject.SetActive(true);
+            itens[i].gameObject.SetActive(true);
+        }
 
         selectorUI.gameObject.SetActive(true);
 
@@ -106,7 +109,10 @@ public class InventoryVisualizer : MonoBehaviour
     public void DeactivateInventory()
     {
         for (int i = 0; i < slots.Length; i++)
+        {
             slots[i].gameObject.SetActive(false);
+            itens[i].gameObject.SetActive(false);
+        }
 
         selectorUI.gameObject.SetActive(false);
 

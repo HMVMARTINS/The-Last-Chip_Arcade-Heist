@@ -1,6 +1,4 @@
 using System.Collections.Generic;
-using System.IO.Compression;
-using Unity.Collections;
 using UnityEngine;
 
 public class Inventory
@@ -33,9 +31,10 @@ public class Inventory
 
     private Collectable GetHoldingItem()
     {
-        if (inventory.Length <= selectedSlot || inventory.Length > selectedSlot)
+        if (inventory.Length <= selectedSlot || selectedSlot < 0)
             return null;
 
+        Debug.Log("Selected slot: " + selectedSlot);
         return inventory[selectedSlot];
     }
 
