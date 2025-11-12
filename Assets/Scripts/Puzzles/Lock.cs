@@ -28,7 +28,7 @@ public class LockPuzzle : InteractableGame
     [SerializeField]
     string correctCode;
 
-    private int selectedTable = 0;
+    private int selectedTable = 1;
     static int[] selectedNumbers = new int[3];
     private string[] validDigits = new string[10]
     {
@@ -62,11 +62,13 @@ public class LockPuzzle : InteractableGame
             {
                 lastRollInteraction = 0;
                 Roll(selectedTable, true);
+                AutoRoll(selectedTable, true);
             }
             else if (Input.GetKey(KeyCode.S))
             {
                 lastRollInteraction = 0;
                 Roll(selectedTable, false);
+                AutoRoll(selectedTable, false);
             }
         }
         else
@@ -106,66 +108,69 @@ public class LockPuzzle : InteractableGame
         this.digits[table].text = text;
     }
 
-    IEnumerator RollDigits(int table, bool up)
-    { // four step system
-        bool finished = false;
-
-        TMP_Text digits = this.digits[table];
-
-        float time = 0;
-        Vector3 initialPos = digits.transform.localPosition;
-        while (!finished)
+    IEnumerator RollDigits(int table, bool up, int rotations)
+    {
+        for (int i = 0; i < rotations; i++)
         {
-            float v = animationCurve.Evaluate(time / rollAnimationTime) * rollDistance; // 0 - 1
-            int dir = up ? -1 : 1;
-            digits.transform.localPosition = initialPos + new Vector3(0f, v * dir, 0f);
-            time += Time.deltaTime;
-            if (time > rollAnimationTime)
-                finished = true;
-            yield return null;
-        }
+            bool finished = false;
 
-        digits.transform.localPosition = initialPos;
-        string newText;
-        if (!up)
-        {
-            string numbers = CleanData(digits.text);
-            string newNumbers = numbers.Substring(1) + numbers[0];
-            newText = FormatData(newNumbers);
+            TMP_Text digits = this.digits[table];
 
-            if (selectedNumbers[table] + 1 > 9)
-                selectedNumbers[table] = 0;
+            float time = 0;
+            Vector3 initialPos = digits.transform.localPosition;
+            while (!finished)
+            {
+                float v = animationCurve.Evaluate(time / rollAnimationTime) * rollDistance; // 0 - 1
+                int dir = up ? -1 : 1;
+                digits.transform.localPosition = initialPos + new Vector3(0f, v * dir, 0f);
+                time += Time.deltaTime;
+                if (time > rollAnimationTime)
+                    finished = true;
+                yield return null;
+            }
+
+            digits.transform.localPosition = initialPos;
+            string newText;
+            if (!up)
+            {
+                string numbers = CleanData(digits.text);
+                string newNumbers = numbers.Substring(1) + numbers[0];
+                newText = FormatData(newNumbers);
+
+                if (selectedNumbers[table] + 1 > 9)
+                    selectedNumbers[table] = 0;
+                else
+                    selectedNumbers[table] += 1;
+            }
             else
-                selectedNumbers[table] += 1;
-        }
-        else
-        {
-            string numbers = CleanData(digits.text);
-            string newNumbers =
-                numbers[numbers.Length - 1] + numbers.Substring(0, numbers.Length - 1);
-            newText = FormatData(newNumbers);
+            {
+                string numbers = CleanData(digits.text);
+                string newNumbers =
+                    numbers[numbers.Length - 1] + numbers.Substring(0, numbers.Length - 1);
+                newText = FormatData(newNumbers);
 
-            if (selectedNumbers[table] - 1 < 0)
-                selectedNumbers[table] = 9;
-            else
-                selectedNumbers[table] -= 1;
+                if (selectedNumbers[table] - 1 < 0)
+                    selectedNumbers[table] = 9;
+                else
+                    selectedNumbers[table] -= 1;
+            }
+            digits.text = newText;
+            Debug.Log(
+                "|"
+                    + selectedNumbers[2]
+                    + "|"
+                    + selectedNumbers[1]
+                    + "|"
+                    + selectedNumbers[0]
+                    + "| => |"
+                    + correctCode[0]
+                    + "|"
+                    + correctCode[1]
+                    + "|"
+                    + correctCode[2]
+                    + "|"
+            );
         }
-        digits.text = newText;
-        Debug.Log(
-            "|"
-                + selectedNumbers[2]
-                + "|"
-                + selectedNumbers[1]
-                + "|"
-                + selectedNumbers[0]
-                + "| => |"
-                + correctCode[0]
-                + "|"
-                + correctCode[1]
-                + "|"
-                + correctCode[2]
-                + "|"
-        );
         CheckForCode();
         yield break;
     }
@@ -225,9 +230,22 @@ public class LockPuzzle : InteractableGame
 
     void Slide(int table) => StartCoroutine(SlideIndicator(table));
 
-    void Roll(int table, bool up) => StartCoroutine(RollDigits(table, up));
+    void Roll(int table, bool up, int rotations = 1) =>
+        StartCoroutine(RollDigits(table, up, rotations));
 
-    void ShowIndicator() => masterIndicator.gameObject.SetActive(true);
-
-    void HideIndicator() => masterIndicator.gameObject.SetActive(false);
+    void AutoRoll(int tableSelected, bool up)
+    {
+        switch (tableSelected)
+        {
+            case 0:
+                Roll(2, !up);
+                break;
+            case 1:
+                Roll(0, up, 2);
+                break;
+            case 2:
+                Roll(0, up);
+                break;
+        }
+    }
 }
