@@ -1,8 +1,9 @@
 using System.Collections;
+using System.Linq;
 using TMPro;
 using UnityEngine;
 
-public class LockPuzzle : MonoBehaviour
+public class LockPuzzle : InteractableGame
 {
     [SerializeField]
     private TMP_Text[] digits;
@@ -24,27 +25,29 @@ public class LockPuzzle : MonoBehaviour
     [SerializeField]
     AnimationCurve animationCurve;
 
+    [SerializeField]
+    string correctCode;
+
     private int selectedTable = 0;
+    static int[] selectedNumbers = new int[3];
     private string[] validDigits = new string[10]
     {
+        "6",
+        "7",
+        "8",
+        "9",
         "0",
         "1",
         "2",
         "3",
         "4",
         "5",
-        "6",
-        "7",
-        "8",
-        "9",
     };
 
     void Start()
     {
         for (int i = 0; i < digits.Length; i++)
-            SetDigits(i, validDigits);
-
-        Slide(selectedTable);
+            SetDigits(i, string.Concat(validDigits));
     }
 
     float lastRollInteraction = 0;
@@ -53,46 +56,52 @@ public class LockPuzzle : MonoBehaviour
     void Update()
     {
         // ROLL INPUT
-        if (lastRollInteraction >= rollAnimationTime)
+        if (lastRollInteraction >= rollAnimationTime + 0.1f)
         {
             if (Input.GetKey(KeyCode.W))
+            {
+                lastRollInteraction = 0;
                 Roll(selectedTable, true);
+            }
             else if (Input.GetKey(KeyCode.S))
+            {
+                lastRollInteraction = 0;
                 Roll(selectedTable, false);
-            lastRollInteraction = 0;
+            }
         }
         else
             lastRollInteraction += Time.deltaTime;
 
         // SLIDE INPUT
-        if (lastSlideInteraction >= slideAnimationTime)
+        if (lastSlideInteraction >= slideAnimationTime + 0.1f)
         {
             if (Input.GetKey(KeyCode.A))
             {
-                selectedTable = Mathf.Clamp(selectedTable - 1, 0, digits.Length - 1);
+                selectedTable = Mathf.Clamp(selectedTable + 1, 0, digits.Length - 1);
+                lastSlideInteraction = 0;
                 Slide(selectedTable);
             }
             else if (Input.GetKey(KeyCode.D))
             {
-                selectedTable = Mathf.Clamp(selectedTable + 1, 0, digits.Length - 1);
+                selectedTable = Mathf.Clamp(selectedTable - 1, 0, digits.Length - 1);
+                lastSlideInteraction = 0;
                 Slide(selectedTable);
             }
-            lastSlideInteraction = 0;
         }
         else
             lastSlideInteraction += Time.deltaTime;
     }
 
-    void SetDigits(int table, string[] digits)
+    void CheckForCode()
     {
-        string text = "\n";
-        for (int i = 0; i < digits.Length; i++)
-        {
-            text += digits[i];
-            if (i == digits.Length - 1)
-                continue;
-            text += "\n";
-        }
+        string currentCode = string.Concat(selectedNumbers.Reverse());
+        if (currentCode == correctCode)
+            Debug.Log("Lock Open");
+    }
+
+    void SetDigits(int table, string digits)
+    {
+        string text = FormatData(digits);
 
         this.digits[table].text = text;
     }
@@ -110,7 +119,7 @@ public class LockPuzzle : MonoBehaviour
             float v = animationCurve.Evaluate(time / rollAnimationTime) * rollDistance; // 0 - 1
             int dir = up ? -1 : 1;
             digits.transform.localPosition = initialPos + new Vector3(0f, v * dir, 0f);
-            time += Time.deltaTime * rollAnimationTime;
+            time += Time.deltaTime;
             if (time > rollAnimationTime)
                 finished = true;
             yield return null;
@@ -118,41 +127,96 @@ public class LockPuzzle : MonoBehaviour
 
         digits.transform.localPosition = initialPos;
         string newText;
-        if (up)
-            newText =
-                digits.text[0]
-                + digits.text.Substring(digits.text.Length - 3, 3)
-                + digits.text.Substring(1, digits.text.Length - 3);
+        if (!up)
+        {
+            string numbers = CleanData(digits.text);
+            string newNumbers = numbers.Substring(1) + numbers[0];
+            newText = FormatData(newNumbers);
+
+            if (selectedNumbers[table] + 1 > 9)
+                selectedNumbers[table] = 0;
+            else
+                selectedNumbers[table] += 1;
+        }
         else
-            newText =
-                digits.text[0]
-                + digits.text.Substring(digits.text.Length - 3, 3)
-                + digits.text.Substring(1, digits.text.Length - 3);
+        {
+            string numbers = CleanData(digits.text);
+            string newNumbers =
+                numbers[numbers.Length - 1] + numbers.Substring(0, numbers.Length - 1);
+            newText = FormatData(newNumbers);
+
+            if (selectedNumbers[table] - 1 < 0)
+                selectedNumbers[table] = 9;
+            else
+                selectedNumbers[table] -= 1;
+        }
         digits.text = newText;
+        Debug.Log(
+            "|"
+                + selectedNumbers[2]
+                + "|"
+                + selectedNumbers[1]
+                + "|"
+                + selectedNumbers[0]
+                + "| => |"
+                + correctCode[0]
+                + "|"
+                + correctCode[1]
+                + "|"
+                + correctCode[2]
+                + "|"
+        );
+        CheckForCode();
         yield break;
     }
 
     /*
-     \n1\n2\n3\n4\n5\n6\n7\n8\n9\n0
-     \n0\n1\n2\n3\n4\n5\n6\n7\n8\n9
+    \n0\n1\n2\n3\n4\n5\n6\n7\n8\n9
+    \n9\n0\n1\n2\n3\n4\n5\n6\n7\n8
      */
+
+    string FormatData(string data)
+    {
+        string cleanData = CleanData(data);
+
+        string newData = "";
+        for (int i = 0; i < data.Length; i++)
+        {
+            newData += "\n";
+            if (i == data.Length / 2 - 1)
+                newData += "<b>";
+            newData += cleanData[i];
+            if (i == data.Length / 2 - 1)
+                newData += "</b>";
+        }
+        return newData;
+    }
+
+    string CleanData(string data) => data.Replace("\n", "").Replace("<b>", "").Replace("</b>", "");
 
     IEnumerator SlideIndicator(int table)
     {
+        table = Mathf.Clamp(table, 0, digits.Length - 1);
+
         bool finished = false;
         float time = 0f;
         Vector3 initialPos = masterIndicator.localPosition;
         float startPosition = initialPos.x;
         float targetPosition = digits[table].transform.parent.localPosition.x;
         float amplitude = targetPosition - startPosition;
+
         while (!finished)
         {
-            float v = animationCurve.Evaluate(time / rollAnimationTime) * amplitude; // 0 - 1
+            float v = animationCurve.Evaluate(time / slideAnimationTime) * amplitude; // 0 - 1
 
             masterIndicator.localPosition = initialPos + new Vector3(v, 0f, 0f);
-            time += Time.deltaTime * slideAnimationTime;
-            if (time > rollAnimationTime)
-                finished = true;
+            time += Time.deltaTime;
+            if (time > slideAnimationTime)
+            {
+                float distance = Mathf.Abs(targetPosition - masterIndicator.localPosition.x);
+                if (distance < 0.05f)
+                    finished = true;
+            }
             yield return null;
         }
 
