@@ -2,6 +2,7 @@ using System.Collections;
 using System.Linq;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class LockPuzzle : InteractableGame
 {
@@ -10,6 +11,9 @@ public class LockPuzzle : InteractableGame
 
     [SerializeField]
     Transform masterIndicator;
+
+    [SerializeField]
+    RectTransform[] outliners;
 
     [SerializeField]
     [Range(0.01f, 1f)]
@@ -26,7 +30,28 @@ public class LockPuzzle : InteractableGame
     AnimationCurve animationCurve;
 
     [SerializeField]
+    AnimationCurve finalAnimationCurve;
+
+    [SerializeField]
+    Vector2 finalOutlinerSize;
+
+    [SerializeField]
     string correctCode;
+
+    [SerializeField]
+    InteractableObject interactableObject;
+
+    [SerializeField]
+    AudioSource[] audioSources;
+
+    [SerializeField]
+    AudioClip rollSound;
+
+    [SerializeField]
+    AudioClip correctSound;
+
+    [SerializeField]
+    AudioClip openingLockSound;
 
     private int selectedTable = 1;
     static int[] selectedNumbers = new int[3];
@@ -44,6 +69,8 @@ public class LockPuzzle : InteractableGame
         "5",
     };
 
+    bool interactable = true;
+
     void Start()
     {
         for (int i = 0; i < digits.Length; i++)
@@ -55,6 +82,8 @@ public class LockPuzzle : InteractableGame
 
     void Update()
     {
+        if (!interactable)
+            return;
         // ROLL INPUT
         if (lastRollInteraction >= rollAnimationTime + 0.1f)
         {
@@ -98,7 +127,7 @@ public class LockPuzzle : InteractableGame
     {
         string currentCode = string.Concat(selectedNumbers.Reverse());
         if (currentCode == correctCode)
-            Debug.Log("Lock Open");
+            FinishPuzzle();
     }
 
     void SetDigits(int table, string digits)
@@ -108,29 +137,15 @@ public class LockPuzzle : InteractableGame
         this.digits[table].text = text;
     }
 
-    IEnumerator RollDigits(int table, bool up, int rotations)
+    IEnumerator RollDigits(int table, bool up, int rotations, float initialDelay = 0f)
     {
+        yield return new WaitForSeconds(initialDelay);
         for (int i = 0; i < rotations; i++)
         {
             bool finished = false;
-
+            string newText;
             TMP_Text digits = this.digits[table];
 
-            float time = 0;
-            Vector3 initialPos = digits.transform.localPosition;
-            while (!finished)
-            {
-                float v = animationCurve.Evaluate(time / rollAnimationTime) * rollDistance; // 0 - 1
-                int dir = up ? -1 : 1;
-                digits.transform.localPosition = initialPos + new Vector3(0f, v * dir, 0f);
-                time += Time.deltaTime;
-                if (time > rollAnimationTime)
-                    finished = true;
-                yield return null;
-            }
-
-            digits.transform.localPosition = initialPos;
-            string newText;
             if (!up)
             {
                 string numbers = CleanData(digits.text);
@@ -154,6 +169,33 @@ public class LockPuzzle : InteractableGame
                 else
                     selectedNumbers[table] -= 1;
             }
+
+            string currentCode = string.Concat(selectedNumbers);
+
+            if (correctCode[table] == currentCode[table])
+                audioSources[table].clip = correctSound;
+            else
+                audioSources[table].clip = rollSound;
+
+            audioSources[table].Play();
+            Debug.Log(
+                "SLOT: " + table + " | CODE: " + currentCode[table] + " -> " + correctCode[table]
+            );
+
+            float time = 0;
+            Vector3 initialPos = digits.transform.localPosition;
+            while (!finished)
+            {
+                float v = animationCurve.Evaluate(time / rollAnimationTime) * rollDistance; // 0 - 1
+                int dir = up ? -1 : 1;
+                digits.transform.localPosition = initialPos + new Vector3(0f, v * dir, 0f);
+                time += Time.deltaTime;
+                if (time > rollAnimationTime)
+                    finished = true;
+                yield return null;
+            }
+
+            digits.transform.localPosition = initialPos;
             digits.text = newText;
             Debug.Log(
                 "|"
@@ -230,22 +272,84 @@ public class LockPuzzle : InteractableGame
 
     void Slide(int table) => StartCoroutine(SlideIndicator(table));
 
-    void Roll(int table, bool up, int rotations = 1) =>
-        StartCoroutine(RollDigits(table, up, rotations));
+    void Roll(int table, bool up, int rotations = 1, float initialDelay = 0f) =>
+        StartCoroutine(RollDigits(table, up, rotations, initialDelay));
 
     void AutoRoll(int tableSelected, bool up)
     {
         switch (tableSelected)
         {
             case 0:
-                Roll(2, !up);
+                Roll(2, !up, 1, 0.2f);
                 break;
             case 1:
-                Roll(0, up, 2);
+                Roll(0, up, 2, 0.2f);
                 break;
             case 2:
-                Roll(0, up);
+                Roll(0, up, 1, 0.2f);
                 break;
         }
+    }
+
+    void FinishPuzzle()
+    {
+        StartCoroutine(FinalAnimation());
+    }
+
+    IEnumerator FinalAnimation(float delay = 3f, float animationDuration = 0.75f)
+    {
+        interactable = false;
+
+        for (int i = 0; i < outliners.Length; i++)
+            outliners[i].gameObject.SetActive(true);
+
+        masterIndicator.gameObject.SetActive(false);
+
+        Vector2 defaultSize = outliners[0].rect.size;
+
+        bool finished = false;
+
+        Image[] images = new Image[outliners.Length];
+        for (int i = 0; i < outliners.Length; i++)
+        {
+            images[i] = outliners[i].GetComponent<Image>();
+            if (images[i] == null)
+                Debug.Log("No image found");
+        }
+
+        Color defaultColor = images[0].color;
+
+        Color newColor = defaultColor;
+        float time = 0;
+        while (!finished)
+        {
+            float v = time / animationDuration;
+
+            if (time >= animationDuration)
+            {
+                time = animationDuration;
+                finished = true;
+            }
+            time += Time.deltaTime;
+
+            newColor.a = 1 - v;
+            Vector2 newSize = Vector2.Lerp(defaultSize, finalOutlinerSize, v);
+            for (int i = 0; i < outliners.Length; i++)
+            {
+                outliners[i].sizeDelta = new Vector2(newSize.x, newSize.y);
+
+                images[i].color = newColor;
+            }
+            yield return null;
+        }
+
+        audioSources[0].clip = openingLockSound;
+        audioSources[0].Play();
+
+        yield return new WaitForSeconds(delay);
+
+        interactableObject.SetInteractability(false);
+        gameObject.SetActive(false); // hide UI
+        yield break;
     }
 }
