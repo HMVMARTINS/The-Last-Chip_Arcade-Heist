@@ -45,6 +45,9 @@ public class LockPuzzle : InteractableGame
     AudioSource[] audioSources;
 
     [SerializeField]
+    AudioClip slideSound;
+
+    [SerializeField]
     AudioClip rollSound;
 
     [SerializeField]
@@ -54,7 +57,7 @@ public class LockPuzzle : InteractableGame
     AudioClip openingLockSound;
 
     private int selectedTable = 1;
-    static int[] selectedNumbers = new int[3];
+    static int[] selectedNumbers = new int[3] { 0, 0, 0 };
     private string[] validDigits = new string[10]
     {
         "6",
@@ -108,13 +111,13 @@ public class LockPuzzle : InteractableGame
         {
             if (Input.GetKey(KeyCode.A))
             {
-                selectedTable = Mathf.Clamp(selectedTable + 1, 0, digits.Length - 1);
+                selectedTable = Mathf.Clamp(selectedTable - 1, 0, digits.Length - 1);
                 lastSlideInteraction = 0;
                 Slide(selectedTable);
             }
             else if (Input.GetKey(KeyCode.D))
             {
-                selectedTable = Mathf.Clamp(selectedTable - 1, 0, digits.Length - 1);
+                selectedTable = Mathf.Clamp(selectedTable + 1, 0, digits.Length - 1);
                 lastSlideInteraction = 0;
                 Slide(selectedTable);
             }
@@ -125,7 +128,7 @@ public class LockPuzzle : InteractableGame
 
     void CheckForCode()
     {
-        string currentCode = string.Concat(selectedNumbers.Reverse());
+        string currentCode = string.Concat(selectedNumbers);
         if (currentCode == correctCode)
             FinishPuzzle();
     }
@@ -171,16 +174,18 @@ public class LockPuzzle : InteractableGame
             }
 
             string currentCode = string.Concat(selectedNumbers);
-
             if (correctCode[table] == currentCode[table])
+            {
+                Debug.LogWarning("Correct digit: " + currentCode[table] + " index: " + table);
                 audioSources[table].clip = correctSound;
+            }
             else
                 audioSources[table].clip = rollSound;
 
             audioSources[table].Play();
-            Debug.Log(
-                "SLOT: " + table + " | CODE: " + currentCode[table] + " -> " + correctCode[table]
-            );
+
+            bool same = correctCode[table] == currentCode[table];
+            Debug.Log(currentCode[table] + " == " + correctCode[table] + " : " + same);
 
             float time = 0;
             Vector3 initialPos = digits.transform.localPosition;
@@ -251,6 +256,9 @@ public class LockPuzzle : InteractableGame
         float startPosition = initialPos.x;
         float targetPosition = digits[table].transform.parent.localPosition.x;
         float amplitude = targetPosition - startPosition;
+
+        audioSources[table].clip = slideSound;
+        audioSources[table].Play();
 
         while (!finished)
         {
