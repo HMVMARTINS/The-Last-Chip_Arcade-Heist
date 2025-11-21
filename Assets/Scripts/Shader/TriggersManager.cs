@@ -46,6 +46,8 @@ public class TriggersManager : MonoBehaviour
 
         private void OnTriggerEnter(Collider other)
         {
+            if (other.tag != "Player")
+                return;
             onTriggered?.Invoke();
             if (destroyAfterUse)
                 gameObject.SetActive(false);
