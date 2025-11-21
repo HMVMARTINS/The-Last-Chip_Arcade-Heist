@@ -13,6 +13,7 @@ public class ConsoleOverlay : MonoBehaviour
 
     bool cursorVisibleBefore = true;
 
+    public ConsoleCore Core => _core;
     ConsoleCore _core;
     bool _visible;
     string _input = "";

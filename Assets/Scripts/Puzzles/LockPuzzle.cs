@@ -360,4 +360,6 @@ public class LockPuzzle : InteractableGame
         gameObject.SetActive(false); // hide UI
         yield break;
     }
+
+    public override void ForceFinish() => FinishPuzzle();
 }

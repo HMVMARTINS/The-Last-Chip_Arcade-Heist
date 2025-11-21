@@ -2,7 +2,23 @@ using UnityEngine;
 
 public class LockObject : InteractableObject
 {
-    protected override void OnInteract() { }
+    [SerializeField]
+    PlayerReferencer playerReferencer;
 
-    protected override void OnDisinteract() { }
+    [SerializeField]
+    InteractionPointer interactionPointer;
+
+    protected override void OnInteract()
+    {
+        playerReferencer.playerMovement.LockMovement(true);
+
+        interactionPointer.HidePointer();
+    }
+
+    protected override void OnDisinteract()
+    {
+        playerReferencer.playerMovement.LockMovement(false);
+
+        interactionPointer.ShowPointer();
+    }
 }

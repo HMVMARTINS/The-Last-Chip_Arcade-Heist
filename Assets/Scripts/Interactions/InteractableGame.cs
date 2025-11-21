@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class InteractableGame : MonoBehaviour
+public abstract class InteractableGame : MonoBehaviour
 {
     [SerializeField]
     PlayerReferencer playerReferencer;
@@ -23,5 +23,8 @@ public class InteractableGame : MonoBehaviour
             obj.SetActive(false);
 
         playerReferencer.inventoryControler.ActivateInventory();
+        playerReferencer.interactionControl.StopInteraction();
     }
+
+    public abstract void ForceFinish();
 }

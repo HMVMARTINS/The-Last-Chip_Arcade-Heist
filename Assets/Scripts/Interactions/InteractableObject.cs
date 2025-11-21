@@ -46,5 +46,4 @@ public abstract class InteractableObject : MonoBehaviour
     protected abstract void OnInteract();
 
     protected virtual void OnDisinteract() { }
-
 }

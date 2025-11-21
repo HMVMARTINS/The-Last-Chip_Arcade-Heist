@@ -28,6 +28,8 @@ public class PlayerInteractionControl : MonoBehaviour
 
     private InteractableObject interactingObject = null;
 
+    public void StopInteraction() => interactingObject = null;
+
     void Update()
     {
         if (interactingObject != null && Input.GetKeyDown(KeyCode.Escape))

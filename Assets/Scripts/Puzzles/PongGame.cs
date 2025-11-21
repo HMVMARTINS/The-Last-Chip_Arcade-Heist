@@ -248,4 +248,6 @@ public class PongGame : InteractableGame
             yield return null;
         }
     }
+
+    public override void ForceFinish() => base.gameObject.SetActive(false);
 }

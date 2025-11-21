@@ -128,6 +128,7 @@ namespace AbstractConsole
         string[] Aliases { get; }
         string Usage { get; }
         void Execute(IConsole runtime, string[] args);
+        public void InjectData(object data);
     }
 
     public class ConsoleCore : IConsole
