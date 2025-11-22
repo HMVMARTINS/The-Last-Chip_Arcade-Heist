@@ -356,8 +356,10 @@ public class LockPuzzle : InteractableGame
 
         yield return new WaitForSeconds(delay);
 
-        interactableObject.SetInteractability(false);
-        gameObject.SetActive(false); // hide UI
+        interactableObject.Disinteract();
+        // gameObject.SetActive(false); // hide UI
+        this.interactable = false;
+
         yield break;
     }
 

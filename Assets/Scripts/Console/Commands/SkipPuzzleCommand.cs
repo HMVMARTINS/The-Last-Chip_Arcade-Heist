@@ -1,6 +1,6 @@
 using System.Collections.Generic;
+using System.Reflection;
 using AbstractConsole;
-using UnityEngine;
 
 [ConsoleCommand("skip", "s")]
 public class SkipPuzzleCommand : IConsoleCommand
@@ -20,28 +20,25 @@ public class SkipPuzzleCommand : IConsoleCommand
 
     public void Execute(IConsole runtime, string[] args)
     {
-        if (runtime is ConsoleCore core)
+        if (games.Length <= 0)
         {
-            if (games.Length <= 0)
-            {
-                runtime.Log($"Nenhum jogo encontrado.", ConsoleLogType.Warning, "console");
-                return;
-            }
-
-            foreach (InteractableGame game in games)
-            {
-                if (game.gameObject.activeSelf)
-                {
-                    game.ForceFinish();
-                    runtime.Log($"Jogo {game.name} finalizado.", ConsoleLogType.Log, "console");
-
-                    return;
-                }
-            }
-
-            runtime.Log($"Nenhum jogo ativo.", ConsoleLogType.Log, "console");
-
+            runtime.Log($"Nenhum jogo encontrado.", ConsoleLogType.Warning, "console");
             return;
         }
+
+        foreach (InteractableGame game in games)
+        {
+            if (game.gameObject.activeSelf)
+            {
+                game.ForceFinish();
+                runtime.Log($"Jogo {game.name} finalizado.", ConsoleLogType.Log, "console");
+
+                return;
+            }
+        }
+
+        runtime.Log($"Nenhum jogo ativo.", ConsoleLogType.Log, "console");
+
+        return;
     }
 }

@@ -55,6 +55,12 @@ public class PlayerInteractionControl : MonoBehaviour
 
             if (hasHit)
             {
+                if (hit.collider.gameObject.layer != LayerMask.NameToLayer("Interactive"))
+                {
+                    if (activeObject != null)
+                        ClearHighlight();
+                    return;
+                }
                 GameObject hitObject = hit.transform.gameObject;
                 InteractableObject interactable = hitObject.GetComponent<InteractableObject>();
 
