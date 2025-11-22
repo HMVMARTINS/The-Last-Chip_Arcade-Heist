@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class ClawMachine : InteractableObject
+public class AdvancedInteractableObject : InteractableObject
 {
     [SerializeField]
     PlayerReferencer playerReferencer;

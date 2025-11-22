@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class LockObject : InteractableObject
+public class BasicInteractableObject : InteractableObject
 {
     [SerializeField]
     PlayerReferencer playerReferencer;
