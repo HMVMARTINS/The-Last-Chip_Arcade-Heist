@@ -1,5 +1,4 @@
 using System.Collections;
-using System.Linq;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -133,6 +132,14 @@ public class LockPuzzle : InteractableGame
             FinishPuzzle();
     }
 
+    void StartVerification() => StartCoroutine(CheckAnswer());
+
+    IEnumerator CheckAnswer(float delay = 0.5f)
+    {
+        yield return new WaitForSeconds(delay);
+        CheckForCode();
+    }
+
     void SetDigits(int table, string digits)
     {
         string text = FormatData(digits);
@@ -218,7 +225,7 @@ public class LockPuzzle : InteractableGame
                     + "|"
             );
         }
-        CheckForCode();
+        StartVerification();
         yield break;
     }
 
@@ -302,6 +309,7 @@ public class LockPuzzle : InteractableGame
     void FinishPuzzle()
     {
         StartCoroutine(FinalAnimation());
+        interactableObject.SetInteractability(false);
     }
 
     IEnumerator FinalAnimation(float delay = 3f, float animationDuration = 0.75f)

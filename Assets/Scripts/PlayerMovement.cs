@@ -1,4 +1,5 @@
 using System.Collections;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.AI;
 using UnityEngine.InputSystem;
@@ -40,6 +41,40 @@ public class PlayerMovement : MonoBehaviour
     float crawlHeight = 0.5f;
     private float defaultHeight;
 
+    [SerializeField]
+    Collider groundCollider;
+
+    [SerializeField]
+    AnimationCurve jumpAnimationCurve;
+
+    [SerializeField]
+    bool jumpEnabled = true;
+
+    [SerializeField]
+    float jumpSpeed = 0.2f;
+
+    [SerializeField]
+    float jumpForce = 1;
+
+    [SerializeField]
+    [Range(0, 1)]
+    float airControl = 0.3f;
+
+    [SerializeField]
+    AudioSource[] audioSources = new AudioSource[3];
+
+    [SerializeField]
+    AudioClip[] jumpPreSounds;
+
+    [SerializeField]
+    AudioClip[] jumpPosSounds;
+
+    [SerializeField]
+    AudioClip[] landingSounds;
+
+    private bool grounded = false;
+    private bool jumpingAnimation = false;
+
     private float playerVelocity;
     bool autoCrawl;
     bool controllable = true;
@@ -71,12 +106,30 @@ public class PlayerMovement : MonoBehaviour
         stepMovementControl = new StepMovementControl(stepSize);
     }
 
+    void OnTriggerStay(Collider other)
+    {
+        if (!grounded)
+            grounded = true;
+    }
+
+    void OnTriggerExit(Collider other) => grounded = false;
+
     void FixedUpdate()
     {
         if (!controllable)
         {
             UpdateStepControl();
             return;
+        }
+
+        bool crawling = Input.GetKey(KeyCode.LeftControl) || autoCrawl;
+
+        if (jumpEnabled)
+        {
+            if (Input.GetKey(KeyCode.Space) && !jumpingAnimation && !crawling)
+            {
+                Jump();
+            }
         }
 
         Vector2 inputs = GetInputs();
@@ -88,15 +141,21 @@ public class PlayerMovement : MonoBehaviour
             (inputDir.sqrMagnitude > 0.0001f) ? (camRot * inputDir.normalized) : Vector3.zero;
 
         bool sprinting = Input.GetKey(KeyCode.LeftShift);
-        bool crawling = Input.GetKey(KeyCode.LeftControl) || autoCrawl;
 
         Vector3 currentVelocity = new Vector3(rb.linearVelocity.x, 0f, rb.linearVelocity.z);
 
         float speed = playerMaxSpeed;
-        if (sprinting)
-            speed = playerSprintSpeed;
-        else if (crawling)
-            speed = playerCrawlSpeed;
+        {
+            if (grounded)
+            {
+                if (sprinting)
+                    speed = playerSprintSpeed;
+                else if (crawling)
+                    speed = playerCrawlSpeed;
+            }
+            else
+                speed = Mathf.Max(playerMaxSpeed * airControl, currentVelocity.magnitude);
+        }
 
         Vector3 desiredVelocity = targetDirection * speed;
 
@@ -107,8 +166,46 @@ public class PlayerMovement : MonoBehaviour
         );
 
         rb.linearVelocity = new Vector3(newVelocityXZ.x, rb.linearVelocity.y, newVelocityXZ.z);
+
+        if (!grounded)
+            return;
+
         CrawlPlayer(crawling);
         UpdateStepControl();
+    }
+
+    void Jump() => StartCoroutine(JumpPlayer());
+
+    IEnumerator JumpPlayer()
+    {
+        jumpingAnimation = true;
+        grounded = false;
+        float time = 0;
+
+        audioSources[0].volume = Random.Range(0.1f, 0.7f);
+        audioSources[0].PlayOneShot(jumpPreSounds[Random.Range(0, jumpPreSounds.Length)]);
+
+        while (time < jumpSpeed)
+        {
+            time += Time.deltaTime;
+            playerCollider.height =
+                jumpAnimationCurve.Evaluate(Mathf.Clamp01(time / jumpSpeed)) * defaultHeight;
+            yield return null;
+        }
+
+        audioSources[1].volume = Random.Range(0.9f, 1f);
+        audioSources[1].PlayOneShot(jumpPosSounds[Random.Range(0, jumpPosSounds.Length)]);
+
+        yield return null;
+
+        playerCollider.height = jumpAnimationCurve.Evaluate(1) * defaultHeight;
+        rb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
+
+        yield return new WaitForSeconds(0.1f);
+
+        jumpingAnimation = false;
+
+        yield break;
     }
 
     void CrawlPlayer(bool crawling)

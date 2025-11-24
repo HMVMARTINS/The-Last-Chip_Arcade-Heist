@@ -5,10 +5,7 @@ public class SlidingGame : InteractableGame
 {
     List<SlidingPiece> pieces = new List<SlidingPiece>();
 
-    void OnEnable()
-    {
-        
-    }
+    void OnEnable() { }
 
     private void InitializePieces() { }
 
