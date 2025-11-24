@@ -5,8 +5,8 @@ public class AdvancedInteractableObject : InteractableObject
     [SerializeField]
     PlayerReferencer playerReferencer;
 
-    [SerializeField]
-    Transform cameraTargetLocation;
+    // [SerializeField]
+    // Transform cameraTargetLocation;
 
     [SerializeField]
     Transform cameraTargetRotation;
@@ -14,13 +14,17 @@ public class AdvancedInteractableObject : InteractableObject
     protected override void OnInteract()
     {
         playerReferencer.playerMovement.LockMovement(true);
-        playerReferencer.playerMovement.GoToPosition(cameraTargetLocation.position);
-        playerReferencer.cameraControl.LockOnObject(cameraTargetRotation);
+        // playerReferencer.playerMovement.GoToPosition(cameraTargetLocation.position);
+        if (cameraTargetRotation != null)
+            playerReferencer.cameraControl.LockOnObject(cameraTargetRotation);
+        playerReferencer.DeactivateUI();
     }
 
     protected override void OnDisinteract()
     {
-        playerReferencer.cameraControl.UnlockObject();
+        if (cameraTargetRotation != null)
+            playerReferencer.cameraControl.UnlockObject();
         playerReferencer.playerMovement.LockMovement(false);
+        playerReferencer.ActivateUI();
     }
 }

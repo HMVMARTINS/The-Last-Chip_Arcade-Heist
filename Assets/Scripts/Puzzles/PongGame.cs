@@ -226,7 +226,7 @@ public class PongGame : InteractableGame
     private void InitializeObjects()
     {
         screenLimits = Vector2.one / 2;
-        pieceLimits = new Vector2(0.05f, 0.1f);
+        pieceLimits = new Vector2(0.05f, 0.08f);
         ballLimits = ball.localScale;
 
         ballSpeed = defaultBallSpeed;

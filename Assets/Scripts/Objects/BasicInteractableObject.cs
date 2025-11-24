@@ -11,6 +11,7 @@ public class BasicInteractableObject : InteractableObject
     protected override void OnInteract()
     {
         playerReferencer.playerMovement.LockMovement(true);
+        playerReferencer.cameraControl.LockOnObject(transform);
 
         interactionPointer.HidePointer();
     }
