@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -295,7 +294,7 @@ namespace AbstractConsole
                 }
                 catch (Exception ex)
                 {
-                    Debug.LogWarning(
+                    Console.WriteLine(
                         $"Failed to instantiate console command {t.FullName}: {ex.Message}"
                     );
                 }
