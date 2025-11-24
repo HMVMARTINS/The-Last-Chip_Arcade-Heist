@@ -1,12 +1,16 @@
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class PlayerInteractionControl : MonoBehaviour
 {
     [SerializeField]
     private Transform playerHead;
 
+    public Transform PlayerHead => playerHead;
+
     [SerializeField]
     private float interactionDistance = 3f;
+    public float InteractionDistance => interactionDistance;
 
     [SerializeField]
     private LayerMask interactionLayer;
@@ -30,6 +34,9 @@ public class PlayerInteractionControl : MonoBehaviour
 
     public void StopInteraction() => interactingObject = null;
 
+    private MovableObject holdingObject = null;
+    private bool IsHoldingObject => holdingObject != null;
+
     void Update()
     {
         if (interactingObject != null && Input.GetKeyDown(KeyCode.Escape))
@@ -37,7 +44,16 @@ public class PlayerInteractionControl : MonoBehaviour
             interactingObject.Disinteract();
             interactingObject = null;
         }
-        HandleInteractionRaycast();
+
+        if (!IsHoldingObject)
+            HandleInteractionRaycast();
+        else
+        {
+            if (Input.GetMouseButtonDown(0))
+                DropObject(holdingObject);
+            else
+                OnUpdateHoldingObjectColor();
+        }
     }
 
     private void HandleInteractionRaycast()
@@ -154,4 +170,49 @@ public class PlayerInteractionControl : MonoBehaviour
         Gizmos.color = Color.blue;
         Gizmos.DrawLine(playerHead.position, playerHead.position + ViewVector);
     }
+
+    #region Holding System
+
+    public bool HoldObject(MovableObject obj)
+    {
+        if (IsHoldingObject)
+            return false;
+
+        holdingObject = obj;
+
+        playerReferencer.DeactivateUI();
+        return true;
+    }
+
+    public bool DropObject(MovableObject obj)
+    {
+        if (!holdingObject || obj != holdingObject || !obj.CanBeDropped)
+            return false;
+
+        holdingObject = null;
+
+        obj.Disinteract();
+        playerReferencer.ActivateUI();
+        return true;
+    }
+
+    private void OnUpdateHoldingObjectColor()
+    {
+        if (!IsHoldingObject || !holdingObject.CollisionStateChanged)
+            return;
+
+        Debug.Log("Holding Object state : " + holdingObject.CanBeDropped);
+
+        Material[] materials = holdingObject.GetRenderer().materials;
+
+        for (int i = 0; i < materials.Length; i++)
+        {
+            Color color = materials[i].color;
+            color.r = holdingObject.CanBeDropped ? 0f : Mathf.Clamp01(color.r + 1f);
+            materials[i].color = color;
+        }
+        return;
+    }
+
+    #endregion
 }
