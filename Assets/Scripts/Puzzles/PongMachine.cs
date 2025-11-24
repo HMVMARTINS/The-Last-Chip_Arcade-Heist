@@ -21,7 +21,7 @@ public class PongMachine : InteractableObject
     protected override void OnInteract()
     {
         playerReferencer.playerMovement.LockMovement(true);
-        playerReferencer.playerMovement.GoToPosition(cameraTargetLocation.position);
+        // playerReferencer.playerMovement.GoToPosition(cameraTargetLocation.position);
         playerReferencer.cameraControl.LockOnObject(cameraTargetRotation);
 
         interactionPointer.HidePointer();
@@ -30,7 +30,7 @@ public class PongMachine : InteractableObject
     protected override void OnDisinteract()
     {
         playerReferencer.cameraControl.UnlockObject();
-        playerReferencer.playerMovement.ForceStopAutoPilot();
+        // playerReferencer.playerMovement.ForceStopAutoPilot();
         playerReferencer.playerMovement.LockMovement(false);
 
         interactionPointer.ShowPointer();

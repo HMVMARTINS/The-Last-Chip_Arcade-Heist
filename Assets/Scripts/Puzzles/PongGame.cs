@@ -197,9 +197,15 @@ public class PongGame : InteractableGame
             StartGame();
     }
 
-    private void ShootBall(Vector2 direction)
+    private void ShootBall(Vector2 direction, bool constantHorizontalVelocity = true)
     {
-        ballVelocity = direction.normalized * ballSpeed;
+        ballVelocity = constantHorizontalVelocity
+            ? new Vector3(
+                direction.normalized.x / Mathf.Abs(direction.normalized.x) * ballSpeed,
+                direction.normalized.y * ballSpeed,
+                0f
+            )
+            : direction.normalized * ballSpeed;
         Debug.Log("Shoot: " + ballVelocity);
     }
 
