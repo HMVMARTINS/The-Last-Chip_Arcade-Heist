@@ -136,7 +136,7 @@ public class PlayerInteractionControl : MonoBehaviour
         if (mat.HasProperty("_Color"))
         {
             defaultColor = mat.color;
-            mat.color = defaultColor + Color.white * 0.05f;
+            mat.color = defaultColor + Color.white * 0.25f;
             usingEmissionHighlight = false;
         }
         interactionPointer.Interact(true);
