@@ -150,7 +150,7 @@ public class PlayerMovement : MonoBehaviour
             {
                 if (sprinting)
                     speed = playerSprintSpeed;
-                else if (crawling)
+                if (crawling)
                     speed = playerCrawlSpeed;
             }
             else
